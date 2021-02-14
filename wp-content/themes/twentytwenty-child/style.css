@@ -9,3 +9,44 @@
   License URI: http://www.gnu.org/licenses/gpl-2.0.html
   Text Domain: twentytwentychild
 */
+
+body {
+  font-size: 16px;
+  font-family: Roboto,Helvetica,Arial,sans-serif;
+  margin: 0;
+}
+
+.skip-link,
+.sronly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+/* header */
+.header {
+  padding: 2rem 3rem;
+}
+/* end of header */
+
+/* footer */
+.footer {
+  background-color: #f9f9f9;
+  font-size: 14px;
+  font-weight: 300;
+  padding: 2rem 5rem;
+}
+
+.footer p {
+  line-height: 1.5;
+}
+
+.footer a{
+  color: #ec1c24;
+}
+/* end footer */
