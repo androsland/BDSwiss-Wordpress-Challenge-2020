@@ -113,6 +113,15 @@ class BDSwissRSS
 			return;
 		}
 
+		if (
+			! wp_verify_nonce(
+				$_POST['prevent_delete_meta_movetotrash'],
+				plugin_basename(__FILE__) . $post->ID
+			)
+		) {
+			return $post->ID;
+		}
+
 		update_post_meta($post->ID, "_bdswiss_rss_description", sanitize_text_field($_POST["_bdswiss_rss_description"]));
 		update_post_meta($post->ID, "_bdswiss_rss_url", sanitize_text_field($_POST["_bdswiss_rss_url"]));
 		update_post_meta($post->ID, "_bdswiss_rss_logo", sanitize_text_field($_POST["_bdswiss_rss_logo"]));
@@ -128,38 +137,52 @@ class BDSwissRSS
 ?>
 
 		<div class="form-group">
-			<div class="rss-id"><strong>Usage:</strong> [bdswiss-rss id="<?php echo $post->ID; ?>"]</div>
+			<label for="shortcode-usage">Usage</label>
+			<input type="text" class="form-control" id="shortcode-usage" value='[bdswiss-rss id="<?php echo $post->ID; ?>"]'/>
 		</div>
 
 		<div class="form-group">
 			<label for="upload_image_button">Logo</label>
+
 			<div class='image-preview-wrapper'>
 				<img id='image-preview' src='<?php echo $custom['_bdswiss_rss_logo'][0]; ?>'>
 			</div>
-			<input id="upload_image_button" type="button" class="button" value="<?php _e('Choose logo'); ?>" />
-			<input type='hidden' name='_bdswiss_rss_logo' id='_bdswiss_rss_logo' value='<?php echo $custom['_bdswiss_rss_logo'][0]; ?>'>
+
+			<div class="upload-buttons">
+				<input id="upload_image_button" type="button" class="button" value="<?php _e('Choose logo'); ?>" />
+				<a href="#" id="remove-logo">Remove logo</a>
+			</div>
+
+			<input type='hidden' name='_bdswiss_rss_logo' id='bdswiss_rss_logo' value='<?php echo $custom['_bdswiss_rss_logo'][0]; ?>'>
 		</div>
 
 		<div class="form-group">
-			<label for="_bdswiss_rss_description">Description</label>
-			<textarea class="form-control" name="_bdswiss_rss_description" id="_bdswiss_rss_description" cols="30" rows="10"><?php echo $custom['_bdswiss_rss_description'][0]; ?></textarea>
+			<label for="bdswiss_rss_description">Description</label>
+			<textarea class="form-control" name="_bdswiss_rss_description" id="bdswiss_rss_description" cols="30" rows="10"><?php echo $custom['_bdswiss_rss_description'][0]; ?></textarea>
 		</div>
 
 		<div class="form-group">
-			<label for="_bdswiss_rss_url">RSS URL</label>
-			<input type="text" class="form-control" name="_bdswiss_rss_url" id="_bdswiss_rss_url" value="<?php echo $custom['_bdswiss_rss_url'][0]; ?>">
+			<label for="bdswiss_rss_url">RSS URL</label>
+			<input type="text" class="form-control" name="_bdswiss_rss_url" id="bdswiss_rss_url" value="<?php echo $custom['_bdswiss_rss_url'][0]; ?>">
 		</div>
 
 		<div class="form-group">
-			<label for="_bdswiss_rss_limit">Posts Limit</label>
-			<input type="number" class="form-control" name="_bdswiss_rss_limit" id="_bdswiss_rss_limit" value="<?php echo $custom['_bdswiss_rss_limit'][0]; ?>">
+			<label for="bdswiss_rss_limit">Posts Limit</label>
+			<input type="number" class="form-control" name="_bdswiss_rss_limit" id="bdswiss_rss_limit" value="<?php echo $custom['_bdswiss_rss_limit'][0]; ?>">
 		</div>
 
 		<div class="form-group">
-			<label for="_bdswiss_rss_keywords">Keywords</label>
-			<input type="text" class="form-control" name="_bdswiss_rss_keywords" id="_bdswiss_rss_keywords" value="<?php echo $custom['_bdswiss_rss_keywords'][0]; ?>">
+			<label for="bdswiss_rss_keywords">Keywords</label>
+			<input type="text" class="form-control" name="_bdswiss_rss_keywords" id="bdswiss_rss_keywords" value="<?php echo $custom['_bdswiss_rss_keywords'][0]; ?>">
 			<div class="help-block">Comma-seperated values</div>
 		</div>
+
+		<input
+			type="hidden"
+			name="prevent_delete_meta_movetotrash"
+			id="prevent_delete_meta_movetotrash"
+			value="<?php echo wp_create_nonce( plugin_basename(__FILE__) . $post->ID ); ?>"
+		/>
 
 <?php
 	}
@@ -193,12 +216,15 @@ class BDSwissRSS
 		$bdswissRSSFeedMeta = get_post_meta($id);
 
 		$source = $bdswissRSSFeedMeta['_bdswiss_rss_url'][0];
-		$logo = $bdswissRSSFeedMeta['_bdswiss_rss_logo'][0];
+		$logo = ( strlen( $bdswissRSSFeedMeta['_bdswiss_rss_logo'][0] ) > 0 )? $bdswissRSSFeedMeta['_bdswiss_rss_logo'][0] : plugin_dir_url( __FILE__ ) . 'assets/images/rss-logo.png';
 		$description = $bdswissRSSFeedMeta['_bdswiss_rss_description'][0];
-		$posts_limit = $bdswissRSSFeedMeta['_bdswiss_rss_limit'][0];
+		$posts_limit = (strlen($bdswissRSSFeedMeta['_bdswiss_rss_limit'][0]) > 0 ) ? (int)$bdswissRSSFeedMeta['_bdswiss_rss_limit'][0] : 5;
 		$keywords = $bdswissRSSFeedMeta['_bdswiss_rss_keywords'][0];
 		$source = $bdswissRSSFeedMeta['_bdswiss_rss_url'][0];
-		$source = $bdswissRSSFeedMeta['_bdswiss_rss_url'][0];
+
+		if ( strlen( trim( $source ) ) == 0 ){
+			return '<p><strong>BDSwiss RSS Error:</strong> Please provide an rss url.</p>';
+		}
 
 		// Read rss url
 		$rssFeed = simplexml_load_file($source);
